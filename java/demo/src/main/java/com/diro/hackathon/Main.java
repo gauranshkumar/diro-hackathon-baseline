@@ -25,6 +25,8 @@ class APIHandler {
     // The API_URL and API_ENDPOINT are the base URL and endpoint for the API
     public final String API_URL = "http://localhost:7777";
     public final String API_ENDPOINT = "/v1/chat/completions";
+    Gson gson = new Gson();
+    ResponseModel responseJson = new ResponseModel();
 
     // The callAPI method sends a POST request to the API with the user input and
     // It takes the user input and an optional URL as arguments.
@@ -57,6 +59,14 @@ class APIHandler {
             // Store the response from the API
             try {
                 this.response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                // Parse the response body to a ResponseModel object using GSON
+                this.responseJson = gson.fromJson(this.response.body(), ResponseModel.class);
+
+                // Add the response from the API to the message array
+                this.message.add(Map.of("role", this.responseJson.choices.get(0).message.role.strip(), "content",
+                        this.responseJson.choices.get(0).message.content.strip()));
+
             } catch (Exception e) {
                 System.out.println("Error during API request: " + e.getMessage());
             }
@@ -68,10 +78,7 @@ class APIHandler {
     // The parseResp method parses the response from the API and returns the content
     public String parseResp() {
 
-        // Parse the response body to a ResponseModel object using GSON
-        Gson gson = new Gson();
-        ResponseModel json = gson.fromJson(this.response.body(), ResponseModel.class);
-        return json.choices.get(0).message.content.strip();
+        return this.responseJson.choices.get(0).message.content.strip();
     }
 }
 
